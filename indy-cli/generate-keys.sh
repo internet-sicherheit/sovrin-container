@@ -1,9 +1,20 @@
 #!/bin/bash
 
+usage() {
+    echo "Usage:
+    generate-keys POOL_NAME WALLET_NAME [ARG..]
+
+Options:
+    -s, --seed string           Use given seed instead of generating one
+    -p, --seed-path file-path   Fetch the seed from a mounted file
+    -v, --verbose               Print the output of indy-cli"
+}
+
 # checks if an argument exists or throws an error otherwise
 check_argument() {
     if [ -z "$1" ]; then
-        echo "$2"
+        echo -e "$2\n"
+        usage
         exit 22
     fi
 }
@@ -13,6 +24,7 @@ opts=$(getopt -o 'vs:p:' --longoptions 'verbose,seed:,seed-path:' -n 'generate-k
 
 # exit if getopt throws an error
 if [ $? -ne 0 ]; then
+    usage
     exit 1
 fi
 
