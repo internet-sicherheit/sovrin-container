@@ -69,21 +69,21 @@ pool_name=$1
 wallet_name=$2
 
 # check that only one seed fetch mechanism is specified
-if [ ! -z ${seed+x} ] && [ ! -z ${seed_path} ]; then
+if [ ! -z "${seed+x}" ] && [ ! -z "${seed_path}" ]; then
     echo "Error: ambiguous seed argument. --seed and --seed-path cannot be used together"
     exit 22
 fi
 
 # try to fetch a seed from filesystem if none was directly given
-if [ -z ${seed+x} ]; then
+if [ -z "${seed+x}" ]; then
     # use default path if none was given
-    if [ -z ${seed_path+x} ]; then
+    if [ -z "${seed_path+x}" ]; then
         seed_path="/var/lib/indy/seed"
     fi
 
     if [ -f "$seed_path" ]; then
         # read the seed from a user supplied file
-        seed=$(cat "$seed_path" | tr -d '\n')
+        seed=$(tr -d '\n' < "$seed_path")
     else
         # randomly generate a seed if none was given
         seed=$(pwgen -s 32 1)
@@ -112,7 +112,7 @@ EOF
 echo "Generating keys..."
 
 # run batch file commands in the CLI
-if [ ! -z ${verbose+x} ]; then
+if [ ! -z "${verbose+x}" ]; then
     indy-cli --config /etc/indy-cli/cliconfig.json batch_file | tee output
 else
     indy-cli --config /etc/indy-cli/cliconfig.json batch_file > output
