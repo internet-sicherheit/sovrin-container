@@ -8,20 +8,21 @@ Usage:
 Options:
     -s, --seed string           Use given seed instead of generating one
     -p, --seed-path file-path   Fetch the seed from a mounted file
+    -h, --help                  Print this help message
     -v, --verbose               Print the output of indy-cli"
 }
 
 # checks if an argument exists or throws an error otherwise
 check_argument() {
     if [ -z "$1" ]; then
-        >&2 echo -e "$2"
+        >&2 echo "$2"
         usage
         exit 22
     fi
 }
 
 # parse the command options using getopt
-opts=$(getopt -o 'vs:p:' --longoptions 'verbose,seed:,seed-path:' -n 'generate-keys' -- "$@")
+opts=$(getopt -o 'hvs:p:' --longoptions 'help,verbose,seed:,seed-path:' -n 'generate-keys' -- "$@")
 
 # exit if getopt throws an error
 if [ $? -ne 0 ]; then
@@ -49,6 +50,10 @@ while true; do
             verbose=true
             shift
             continue
+            ;;
+        '-h'|'--help')
+            usage
+            exit 0
             ;;
         '--')
             shift
@@ -127,7 +132,7 @@ verkey=$(echo "$tmp" | head -4 | tail -1)
 echo -e "\033[1;31mAttention\033[39;1m
 The seed and wallet key are very sensitive data and should be handled accordingly. Please store both in a secure manner.\033[0m\n"
 
-echo -e "\033[1;31mSeed:\033[0m $seed
+echo -e "\033[1;31mSteward seed:\033[0m $seed
 \033[1;31mWallet key:\033[0m $wallet_key
 \033[1mDID:\033[0m $did
 \033[1mverkey:\033[0m $verkey"

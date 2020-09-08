@@ -8,6 +8,7 @@ Usage:
 Options:
     -s, --seed string           Use given seed instead of generating one
     -p, --seed-path file-path   Fetch the seed from a mounted file
+    -h, --help                  Print this help message
     -v, --verbose               Print verbose command output"
 }
 
@@ -20,7 +21,7 @@ check_argument() {
 }
 
 # parse the command options using getopt
-opts=$(getopt -o 'vs:p:' --longoptions 'verbose,seed:,seed-path:' -n 'init-node' -- "$@")
+opts=$(getopt -o 'hvs:p:' --longoptions 'help,verbose,seed:,seed-path:' -n 'init-node' -- "$@")
 
 # exit if getopt throws an error
 if [ $? -ne 0 ]; then
@@ -47,6 +48,10 @@ while true; do
             verbose=true
             shift
             continue
+            ;;
+        '-h'|'--help')
+            usage
+            exit 0
             ;;
         '--')
             shift
