@@ -1,7 +1,8 @@
 #!/bin/bash
 
 usage() {
-    echo "Usage:
+    echo "
+Usage:
     generate-keys POOL_NAME WALLET_NAME [ARG..]
 
 Options:
@@ -13,7 +14,7 @@ Options:
 # checks if an argument exists or throws an error otherwise
 check_argument() {
     if [ -z "$1" ]; then
-        echo -e "$2\n"
+        >&2 echo -e "$2"
         usage
         exit 22
     fi
@@ -54,7 +55,7 @@ while true; do
             break
             ;;
         *)
-            echo "Error: unexpected internal error"
+            >&2 echo "Error: unexpected internal error"
             exit 1
             ;;
     esac
@@ -70,7 +71,7 @@ wallet_name=$2
 
 # check that only one seed fetch mechanism is specified
 if [ ! -z "${seed+x}" ] && [ ! -z "${seed_path}" ]; then
-    echo "Error: ambiguous seed argument. --seed and --seed-path cannot be used together"
+    >&2 echo "Error: ambiguous seed argument. --seed and --seed-path cannot be used together"
     exit 22
 fi
 
@@ -92,7 +93,7 @@ fi
 
 # verify the seed length
 if [ ${#seed} != 32 ]; then
-    echo "Error: incorrect seed size. Expected 32 but got ${#seed}"
+    >&2 echo "Error: incorrect seed size. Expected 32 but got ${#seed}"
     exit 22
 fi
 
