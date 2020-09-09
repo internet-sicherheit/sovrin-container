@@ -16,7 +16,7 @@ generate-keys is a wrapper that automates the creation of a new key pair. The re
 Using the `--seed` or `--seed-path` option allows the regeneration of a key pair from its seed.
 
 ```
-docker run indy-cli generate-keys POOL_NAME WALLET_NAME [ARG..]
+docker run -v LOCAL_DIR:/root/.indy_client indy-cli generate-keys POOL_NAME WALLET_NAME [ARG..]
 
 Options:
     -s, --seed string           Use given seed instead of generating one
