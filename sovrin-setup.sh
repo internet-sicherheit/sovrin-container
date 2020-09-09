@@ -14,7 +14,7 @@ Options:
 
 check_argument() {
     if [ -z "$1" ]; then
-        echo "$2"
+        >&2 echo "$2"
         exit 22
     fi
 }
@@ -208,8 +208,14 @@ else
     echo "$steward_seed" > "$wallet_data_dir/steward_seed"
 
     $engine run -v "$wallet_data_dir":/root/.indy_client indy-cli generate-keys "$pool_name" "$wallet_name" --seed-path=/root/.indy_client/steward_seed "$verbose"
+fi
 
-    # safely delete the seed file
+if [ ! $? -eq 0 ]; then
+    >&2 echo -e "\033[1;31mError:\033[0m failed to create wallet"
+    exit 1
+fi
+
+if [ -f "$wallet_data_dir/steward_seed" ]; then
     shred --remove=unlink "$wallet_data_dir/steward_seed"
 fi
 
@@ -222,8 +228,14 @@ else
     echo "$node_seed" > "$ledger_data_dir/node_seed"
 
     $engine run -v "$ledger_data_dir":/var/lib/indy validator init-node "$node_name" --seed-path=/var/lib/indy/node_seed "$verbose"
+fi
 
-    # safely delete the seed file
+if [ ! $? -eq 0 ]; then
+    >&2 echo -e "\033[1;31mError:\033[0m failed to initialize node"
+    exit 1
+fi
+
+if [ -f "$ledger_data_dir/node_seed" ]; then
     shred --remove=unlink "$ledger_data_dir/node_seed"
 fi
 

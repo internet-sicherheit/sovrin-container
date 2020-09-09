@@ -117,6 +117,8 @@ EOF
 
 echo "Generating keys..."
 
+set -o pipefail
+
 # run batch file commands in the CLI
 if [ ! -z "${verbose+x}" ]; then
     indy-cli --config /etc/indy-cli/cliconfig.json batch_file | tee output
@@ -124,10 +126,23 @@ else
     indy-cli --config /etc/indy-cli/cliconfig.json batch_file > output
 fi
 
+if [ ! $? -eq 0 ]; then
+    >2& echo "Error: unexpected error during indy-cli command execution"
+    set +o pipefail
+    exit 1
+fi
+
+set +o pipefail
+
 # parse the DID and verkey from the indy-cli output
 tmp=$(grep "Did \"" output | tr \" '\n')
 did=$(echo "$tmp" | head -2 | tail -1)
 verkey=$(echo "$tmp" | head -4 | tail -1)
+
+if [ -z "$did" ] || [ -z "$verkey" ]; then
+    >2& echo "Error: failed to get DID and verkey. Please run in verbose mode and check the indy-cli output"
+    exit 1
+fi
 
 echo -e "\033[1;31mAttention\033[39;1m
 The seed and wallet key are very sensitive data and should be handled accordingly. Please store both in a secure manner.\033[0m\n"
