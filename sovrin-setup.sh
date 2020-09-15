@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# prints the usage of this script
 usage() {
     echo "
 Usage:
@@ -12,6 +13,7 @@ Options:
     -v, --verbose               Print verbose output"
 }
 
+# checks that a given argument is set and prints an error if not
 check_argument() {
     if [ -z "$1" ]; then
         >&2 echo "$2"
@@ -19,11 +21,14 @@ check_argument() {
     fi
 }
 
+# checks the existence of a command
 has_command() {
     hash "$1" 2>/dev/null || return 1
     return 0
 }
 
+# prompts the user to input data
+# allows setting a default value and help text
 get_user_input() {
     local varname="$1"
     local msg="$2"
@@ -33,6 +38,7 @@ get_user_input() {
     while true; do
         local prompt="$msg$(if [ "${#default}" -gt 0 ]; then echo " (default: $default)"; fi): "
         read -p $'\e[1;33m?\e[0m '"$prompt"
+
         if [ "${#REPLY}" -eq 0 ] && [ "${#default}" -gt 0 ]; then
             eval $varname="$default"
             return 0
@@ -47,6 +53,7 @@ get_user_input() {
     done
 }
 
+# presents the user with a yes or no choice
 get_user_confirmation() {
     local msg="$1"
     local help="$2"
@@ -65,14 +72,18 @@ get_user_confirmation() {
     done
 }
 
+# parse the command options using getopt
 opts=$(getopt -o 'hve:c:' --longoptions 'help,verbose,engine:,config:' -n 'sovrin-setup' -- "$@")
 
+# exit if getopt throws an error
 if [ $? -ne 0 ]; then
     exit 1
 fi
 
+# apply the rearranged arguments
 eval set -- "$opts"
 
+# iterate over and parse the given flags
 while true; do
     case "$1" in
         '-c'|'--config')
@@ -99,7 +110,8 @@ while true; do
             break
             ;;
         *)
-            break
+            >&2 echo "Error: unexpected internal error"
+            exit 1
             ;;
     esac
 done
@@ -173,8 +185,8 @@ fi
 check_argument "$node_name" "Missing node name in config"
 check_argument "$pool_name" "Missing pool name in config"
 check_argument "$wallet_name" "Missing wallet name in config"
-check_argument "$wallet_data_dir" "Missing data directory in config"
-check_argument "$ledger_data_dir" "Missing data directory in config"
+check_argument "$wallet_data_dir" "Missing wallet data directory in config"
+check_argument "$ledger_data_dir" "Missing ledger data directory in config"
 
 # check which container engine to use
 if [ -z "${engine+x}" ]; then
@@ -210,11 +222,13 @@ else
     $engine run -v "$wallet_data_dir":/root/.indy_client indy-cli generate-keys "$pool_name" "$wallet_name" --seed-path=/root/.indy_client/steward_seed "$verbose"
 fi
 
+# check the exit code
 if [ ! $? -eq 0 ]; then
     >&2 echo -e "\033[1;31mError:\033[0m failed to create wallet"
     exit 1
 fi
 
+# savely remove any seed data that has been used
 if [ -f "$wallet_data_dir/steward_seed" ]; then
     shred --remove=unlink "$wallet_data_dir/steward_seed"
 fi
@@ -230,11 +244,13 @@ else
     $engine run -v "$ledger_data_dir":/var/lib/indy validator init-node "$node_name" --seed-path=/var/lib/indy/node_seed "$verbose"
 fi
 
+# check the exit code
 if [ ! $? -eq 0 ]; then
     >&2 echo -e "\033[1;31mError:\033[0m failed to initialize node"
     exit 1
 fi
 
+# savely remove any seed data that has been used
 if [ -f "$ledger_data_dir/node_seed" ]; then
     shred --remove=unlink "$ledger_data_dir/node_seed"
 fi
