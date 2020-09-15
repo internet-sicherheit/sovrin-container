@@ -1,0 +1,78 @@
+name: build-and-test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test-indy-cli:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build image
+      run: docker build --tag indy-cli ./indy-cli
+    - name: Prepare data directory
+      run: mkdir ~/data
+    - name: Check required arguments
+      run: |
+        docker run indy-cli generate-keys 2>&1 > /dev/null | grep -iq "Missing pool name argument"
+        docker run indy-cli generate-keys poolname 2>&1 > /dev/null | grep -iq "Missing wallet name argument"
+    - name: Run generate-keys command
+      run: docker run -v ~/data:/root/.indy_client indy-cli generate-keys poolname walletname > output
+    - name: Verify command output
+      run: |
+        test "$(cat output | grep -i "Seed:" | awk -F' ' '{print $NF}')" != ""
+        test "$(cat output | grep -i "Wallet key:" | awk -F' ' '{print $NF}')" != ""
+        test "$(cat output | grep -i "DID:" | awk -F' ' '{print $NF}')" != ""
+        test "$(cat output | grep -i "verkey:" | awk -F' ' '{print $NF}')" != ""
+    - name: Run error case if data already exist
+      run: docker run -v ~/data:/root/.indy_client indy-cli generate-keys poolname walletname > err_output 2>&1 || test $? -eq 1
+    - name: Parse error output
+      run: cat err_output | grep -qi "failed to get DID and verkey"
+    - name: Run generate-keys with seed given by file
+      run: |
+        mkdir ~/data2
+        echo "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" > ~/data2/seed
+        docker run -v ~/data2:/root/.indy_client indy-cli generate-keys poolname walletname --seed-path=/root/.indy_client/seed > output
+    - name: Verify seed output
+      run: test "$(cat output | grep -i "Seed:" | awk -F' ' '{print $NF}')" == "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    - name: Run generate-keys with seed given by argument
+      run: |
+        mkdir ~/data3
+        docker run -v ~/data3:/root/.indy_client indy-cli generate-keys poolname walletname --seed=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA > output
+    - name: Verify seed output
+      run: test "$(cat output | grep -i "Seed:" | awk -F' ' '{print $NF}')" == "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  test-validator:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build image
+      run: docker build --tag validator ./validator
+    - name: Prepare data directory
+      run: mkdir ~/data
+    - name: Check required arguments
+      run: docker run validator init-node 2>&1 > /dev/null | grep -iq "Missing node name argument"
+    - name: Run init-node command
+      run: docker run -v ~/data:/var/lib/indy validator init-node nodename > output
+    - name: Verify command output
+      run: |
+        test "$(cat output | grep -i "Seed:" | awk -F' ' '{print $NF}')" != ""
+        test "$(cat output | grep -i "Verification key:" | awk -F' ' '{print $NF}')" != ""
+        test "$(cat output | grep -i "BLS public key:" | awk -F' ' '{print $NF}')" != ""
+        test "$(cat output | grep -i "BLS proof of possession:" | awk -F' ' '{print $NF}')" != ""
+    - name: Run init-node with seed given by file
+      run: |
+        mkdir ~/data2
+        echo "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" > ~/data2/seed
+        docker run -v ~/data2:/var/lib/indy validator init-node nodename --seed-path=/var/lib/indy/seed > output
+    - name: Verify seed output
+      run: test "$(cat output | grep -i "Seed:" | awk -F' ' '{print $NF}')" == "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    - name: Run init-node with seed given by argument
+      run: |
+        mkdir ~/data3
+        docker run -v ~/data3:/var/lib/indy validator init-node nodename --seed=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA > output
+    - name: Verify seed output
+      run: test "$(cat output | grep -i "Seed:" | awk -F' ' '{print $NF}')" == "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+ 

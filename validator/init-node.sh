@@ -15,7 +15,7 @@ Options:
 # checks if an argument exists or throws an error otherwise
 check_argument() {
     if [ -z "$1" ]; then
-        >&2 echo "$2"
+        >&2 echo "Error: $2"
         exit 22
     fi
 }
