@@ -16,7 +16,7 @@ Options:
 # checks that a given argument is set and prints an error if not
 check_argument() {
     if [ -z "$1" ]; then
-        >&2 echo "$2"
+        >&2 echo "Error: $2"
         exit 22
     fi
 }
@@ -44,7 +44,7 @@ get_user_input() {
             return 0
         else
             if [ "${#REPLY}" -eq 0 ] || [ "$REPLY" = "?" ]; then
-                echo "$help"
+                echo "Help: $help"
                 continue
             fi
         fi
@@ -66,7 +66,7 @@ get_user_confirmation() {
         case $yn in
             [Yy]* ) return 0; ;;
             [Nn]* ) return 1; ;;
-            ? ) echo "$help"; continue;;
+            ? ) echo "Help: $help"; continue;;
             * ) return $default; ;;
         esac
     done
@@ -136,7 +136,7 @@ Typing \033[1m?\033[0m will print an explaination what exactly is being asked fo
         get_user_input \
             "wallet_name" \
             "Wallet name" \
-            "The local name your wallet will be saved as locally" \
+            "The name your wallet will be saved as locally" \
             "buildernet_wallet"
         get_user_input \
             "wallet_data_dir" \

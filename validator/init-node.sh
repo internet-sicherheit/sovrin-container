@@ -112,7 +112,7 @@ bls_pop=$(grep -i "Proof of possession for BLS key is" output | awk -F' ' '{prin
 echo -e "\033[1;31mAttention\033[39;1m
 The seed is sensitive data and should be handled accordingly in a secure manner. Your Node verification key and BLS key along with its POP are public and will be published on the ledger using the indy-cli.\033[0m\n"
 
-echo -e "\033[1;31mSeed:\033[0m $seed
+echo -e "\033[1;31mNode seed:\033[0m $seed
 \033[1mVerification key:\033[0m $ver_key
 \033[1mBLS public key:\033[0m $bls_pub_key
 \033[1mBLS proof of possession:\033[0m $bls_pop"
