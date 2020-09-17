@@ -40,7 +40,7 @@ get_user_input() {
         read -p $'\e[1;33m?\e[0m '"$prompt"
 
         if [ "${#REPLY}" -eq 0 ] && [ "${#default}" -gt 0 ]; then
-            eval $varname="$default"
+            printf -v "$varname" '%s' "$default"
             return 0
         else
             if [ "${#REPLY}" -eq 0 ] || [ "$REPLY" = "?" ]; then
@@ -48,7 +48,7 @@ get_user_input() {
                 continue
             fi
         fi
-        eval $varname="$REPLY"
+        printf -v "$varname" '%s' "$REPLY"
         return 0
     done
 }

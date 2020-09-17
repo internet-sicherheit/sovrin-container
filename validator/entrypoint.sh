@@ -13,7 +13,7 @@ env_file="/var/lib/indy/indy.env"
 
 # check the env file. It's absense implies that the node has not been initialized
 if [ ! -f "$env_file" ]; then
-    >&2 echo "Node has not yet need initialized. Please run init-node first"
+    >&2 echo "Error: Node has not yet need initialized. Please run init-node first"
     exit 1
 fi
 

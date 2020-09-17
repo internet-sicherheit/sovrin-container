@@ -1,4 +1,5 @@
 #!/bin/bash
+set -o pipefail
 
 usage() {
     echo "
@@ -117,7 +118,6 @@ EOF
 
 echo "Generating keys..."
 
-set -o pipefail
 
 # run batch file commands in the CLI
 if [ ! -z "${verbose+x}" ]; then
@@ -127,12 +127,9 @@ else
 fi
 
 if [ ! $? -eq 0 ]; then
-    >2& echo "Error: unexpected error during indy-cli command execution"
-    set +o pipefail
+    >&2 echo "Error: unexpected error during indy-cli command execution"
     exit 1
 fi
-
-set +o pipefail
 
 # parse the DID and verkey from the indy-cli output
 tmp=$(grep "Did \"" output | tr \" '\n')
@@ -140,7 +137,7 @@ did=$(echo "$tmp" | head -2 | tail -1)
 verkey=$(echo "$tmp" | head -4 | tail -1)
 
 if [ -z "$did" ] || [ -z "$verkey" ]; then
-    >2& echo "Error: failed to get DID and verkey. Please run in verbose mode and check the indy-cli output"
+    >&2 echo "Error: failed to get DID and verkey. Please run in verbose mode and check the indy-cli output"
     exit 1
 fi
 
