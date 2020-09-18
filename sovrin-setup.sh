@@ -188,6 +188,10 @@ check_argument "$wallet_name" "Missing wallet name in config"
 check_argument "$wallet_data_dir" "Missing wallet data directory in config"
 check_argument "$ledger_data_dir" "Missing ledger data directory in config"
 
+# manually expand tilde
+wallet_data_dir="${wallet_data_dir/#\~/$HOME}"
+ledger_data_dir="${ledger_data_dir/#\~/$HOME}"
+
 # check which container engine to use
 if [ -z "${engine+x}" ]; then
     has_command "podman"

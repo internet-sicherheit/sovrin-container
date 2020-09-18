@@ -42,13 +42,13 @@ Supplying a steward or node seed allows the recovery of previously used keys in 
 ## Non-interactive examples
 ```
 $ cat setup_config 
-node_name=sovrin-node
-pool_name=buildernet
-wallet_name=buildernet_wallet
-wallet_data_dir=~/data/wallet
-ledger_data_dir=~/data/ledger
-#steward_seed=
-#node_seed=
+node_name="sovrin-node"
+pool_name="buildernet"
+wallet_name="buildernet_wallet"
+wallet_data_dir="~/data/wallet"
+ledger_data_dir="~/data/ledger"
+#steward_seed=""
+#node_seed=""
 $ ./sovrin-setup.sh -c ./setup_config
 ```
 

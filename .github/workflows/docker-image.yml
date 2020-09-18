@@ -97,7 +97,7 @@ jobs:
       run: mkdir -p ~/data/{wallet,ledger}
     - name: Run setup in non-interactive mode
       run: |
-        echo -e "node_name=sovrin-node\npool_name=buildernet\nwallet_name=buildernet_wallet\nwallet_data_dir=~/data/wallet\nledger_data_dir=~/data/ledger\nsteward_seed=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nnode_seed=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" > ~/setup_config
+        echo -e "node_name=\"sovrin-node\"\npool_name=\"buildernet\"\nwallet_name=\"buildernet_wallet\"\nwallet_data_dir=\"~/data/wallet\"\nledger_data_dir=\"~/data/ledger\"\nsteward_seed=\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"\nnode_seed=\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"" > ~/setup_config
         ./sovrin-setup.sh -c ~/setup_config > output
     - name: Verify seed transfer
       run: |
