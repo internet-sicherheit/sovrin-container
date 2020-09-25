@@ -12,8 +12,9 @@ RUN apt-get update && \
     sed -i -re "s/(NETWORK_NAME = ')\\w+/\\1net3/" /etc/indy/indy_config.py && \
     sed -i -re "s/(enableStdOutLogging = )\\w+/\\1True/" /etc/indy/indy_config.py && \
     mkdir -p /var/lib/indy/net3 && \
-    curl -o /var/lib/indy/net3/domain_transactions_genesis https://raw.githubusercontent.com/sovrin-foundation/sovrin/master/sovrin/domain_transactions_builder_genesis && \
-    curl -o /var/lib/indy/net3/pool_transactions_genesis https://raw.githubusercontent.com/sovrin-foundation/sovrin/master/sovrin/pool_transactions_builder_genesis && \
+    curl -Ss -o /var/lib/indy/net3/domain_transactions_genesis https://raw.githubusercontent.com/sovrin-foundation/sovrin/master/sovrin/domain_transactions_builder_genesis && \
+    curl -Ss -o /var/lib/indy/net3/pool_transactions_genesis https://raw.githubusercontent.com/sovrin-foundation/sovrin/master/sovrin/pool_transactions_builder_genesis && \
+    chown -R root: /var/lib/indy && \
     chmod +x /usr/local/bin/init-node && \
     chmod +x /usr/local/bin/entrypoint.sh
 

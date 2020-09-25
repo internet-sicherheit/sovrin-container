@@ -72,6 +72,9 @@ get_user_confirmation() {
     done
 }
 
+wallet_volume_name="sovrin-wallet"
+ledger_volume_name="sovrin-ledger"
+
 # parse the command options using getopt
 opts=$(getopt -o 'hve:c:' --longoptions 'help,verbose,engine:,config:' -n 'sovrin-setup' -- "$@")
 
@@ -138,14 +141,6 @@ Typing \033[1m?\033[0m will print an explaination what exactly is being asked fo
             "Wallet name" \
             "The name your wallet will be saved as locally" \
             "buildernet_wallet"
-        get_user_input \
-            "wallet_data_dir" \
-            "Wallet data directory" \
-            "The local directory the wallet will be stored at"
-        get_user_input \
-            "ledger_data_dir" \
-            "Ledger data directory" \
-            "The local directory ledger data will be stored at. Please make sure that you have ample free space at this location. The current recommendation is 2TB"
 
         get_user_confirmation \
             "Recover steward keys?" \
@@ -185,12 +180,6 @@ fi
 check_argument "$node_name" "Missing node name in config"
 check_argument "$pool_name" "Missing pool name in config"
 check_argument "$wallet_name" "Missing wallet name in config"
-check_argument "$wallet_data_dir" "Missing wallet data directory in config"
-check_argument "$ledger_data_dir" "Missing ledger data directory in config"
-
-# manually expand tilde
-wallet_data_dir="${wallet_data_dir/#\~/$HOME}"
-ledger_data_dir="${ledger_data_dir/#\~/$HOME}"
 
 # check which container engine to use
 if [ -z "${engine+x}" ]; then
@@ -214,16 +203,32 @@ $engine build -t indy-cli ./indy-cli > /dev/null
 echo "Building validator image..."
 $engine build -t validator ./validator > /dev/null
 
+# create volumes
+$engine volume create $wallet_volume_name > /dev/null
+if [ ! $? -eq 0 ]; then
+    >&2 echo -e "\033[1;31mError:\033[0m failed to create wallet volume"
+    exit 1
+fi
+
+$engine volume create $ledger_volume_name > /dev/null
+if [ ! $? -eq 0 ]; then
+    >&2 echo -e "\033[1;31mError:\033[0m failed to create ledger volume"
+    exit 1
+fi
+
+wallet_dir=$(podman volume inspect $wallet_volume_name -f "{{.Mountpoint}}")
+ledger_dir=$(podman volume inspect $ledger_volume_name -f "{{.Mountpoint}}")
+
 # generate steward and node keys
 echo -e "\n*** Steward information ***"
 if [ -z "${steward_seed+x}" ]; then
-    $engine run -v "$wallet_data_dir":/root/.indy_client indy-cli generate-keys "$pool_name" "$wallet_name" "$verbose"
+    $engine run --rm -v $wallet_volume_name:/root/.indy_client indy-cli generate-keys "$pool_name" "$wallet_name" "$verbose"
 else
     # pass the steward seed into the container
     # using a file to do so hides it from the process list
-    echo "$steward_seed" > "$wallet_data_dir/steward_seed"
+    echo "$steward_seed" > "$wallet_dir/steward_seed"
 
-    $engine run -v "$wallet_data_dir":/root/.indy_client indy-cli generate-keys "$pool_name" "$wallet_name" --seed-path=/root/.indy_client/steward_seed "$verbose"
+    $engine run --rm -v $wallet_volume_name:/root/.indy_client indy-cli generate-keys "$pool_name" "$wallet_name" --seed-path=/root/.indy_client/steward_seed "$verbose"
 fi
 
 # check the exit code
@@ -233,19 +238,21 @@ if [ ! $? -eq 0 ]; then
 fi
 
 # savely remove any seed data that has been used
-if [ -f "$wallet_data_dir/steward_seed" ]; then
-    shred --remove=unlink "$wallet_data_dir/steward_seed"
+if [ -f "$wallet_dir/steward_seed" ]; then
+    shred --remove=unlink "$wallet_dir/steward_seed"
 fi
 
+# initialize validator node
 echo -e "\n*** Node information ***"
+
 if [ -z "${node_seed+x}" ]; then
-    $engine run -v "$ledger_data_dir":/var/lib/indy validator init-node "$node_name" "$verbose"
+    $engine run --rm -v $ledger_volume_name:/var/lib/indy validator init-node "$node_name" "$verbose"
 else
     # pass the node seed into the container
     # using a file to do so hides it from the process list
-    echo "$node_seed" > "$ledger_data_dir/node_seed"
+    echo "$node_seed" > "$ledger_dir/node_seed"
 
-    $engine run -v "$ledger_data_dir":/var/lib/indy validator init-node "$node_name" --seed-path=/var/lib/indy/node_seed "$verbose"
+    $engine run --rm -v $ledger_volume_name:/var/lib/indy validator init-node "$node_name" --seed-path=/var/lib/indy/node_seed "$verbose"
 fi
 
 # check the exit code
@@ -255,8 +262,8 @@ if [ ! $? -eq 0 ]; then
 fi
 
 # savely remove any seed data that has been used
-if [ -f "$ledger_data_dir/node_seed" ]; then
-    shred --remove=unlink "$ledger_data_dir/node_seed"
+if [ -f "$ledger_dir/node_seed" ]; then
+    shred --remove=unlink "$ledger_dir/node_seed"
 fi
 
 echo -e "\n\033[1mSetup has been completed\033[0m"

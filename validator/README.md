@@ -28,5 +28,5 @@ Options:
 Running the container without any CMD will automatically start the node. Please make sure to initialize your node first by using the init-node command as described above.
 
 ```
-docker run -v LOCAL_DIR:/var/lib/indy -p 9701:9701,9702:9702 validator
+docker run -v VOLUME_NAME:/var/lib/indy -p 9701:9701,9702:9702 validator
 ```
