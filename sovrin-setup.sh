@@ -203,21 +203,15 @@ $engine build -t indy-cli ./indy-cli > /dev/null
 echo "Building validator image..."
 $engine build -t validator ./validator > /dev/null
 
-# create volumes
-$engine volume create $wallet_volume_name > /dev/null
-if [ ! $? -eq 0 ]; then
-    >&2 echo -e "\033[1;31mError:\033[0m failed to create wallet volume"
-    exit 1
-fi
-
-$engine volume create $ledger_volume_name > /dev/null
-if [ ! $? -eq 0 ]; then
-    >&2 echo -e "\033[1;31mError:\033[0m failed to create ledger volume"
-    exit 1
-fi
-
-wallet_dir=$(podman volume inspect $wallet_volume_name -f "{{.Mountpoint}}")
-ledger_dir=$(podman volume inspect $ledger_volume_name -f "{{.Mountpoint}}")
+# check if volumes already exist
+volumes=$($engine volume ls)
+for vol in "$wallet_volume_name" "$ledger_volume_name"
+do
+    if echo "$volumes" | grep -E ".*\s$vol$" > /dev/null; then
+        print_error "a volume named $vol already exists"
+        exit 1
+    fi
+done
 
 # generate steward and node keys
 echo -e "\n*** Steward information ***"
@@ -226,9 +220,9 @@ if [ -z "${steward_seed+x}" ]; then
 else
     # pass the steward seed into the container
     # using a file to do so hides it from the process list
-    echo "$steward_seed" > "$wallet_dir/steward_seed"
+    echo "$steward_seed" > "./steward_seed"
 
-    $engine run --rm -v $wallet_volume_name:/root/.indy_client indy-cli generate-keys "$pool_name" "$wallet_name" --seed-path=/root/.indy_client/steward_seed "$verbose"
+    $engine run --rm -v $wallet_volume_name:/root/.indy_client -v ./steward_seed:/root/.indy_client/steward_seed indy-cli generate-keys "$pool_name" "$wallet_name" --seed-path=/root/.indy_client/steward_seed "$verbose"
 fi
 
 # check the exit code
@@ -238,8 +232,8 @@ if [ ! $? -eq 0 ]; then
 fi
 
 # savely remove any seed data that has been used
-if [ -f "$wallet_dir/steward_seed" ]; then
-    shred --remove=unlink "$wallet_dir/steward_seed"
+if [ -f "./steward_seed" ]; then
+    shred --remove=unlink "./steward_seed"
 fi
 
 # initialize validator node
@@ -250,9 +244,9 @@ if [ -z "${node_seed+x}" ]; then
 else
     # pass the node seed into the container
     # using a file to do so hides it from the process list
-    echo "$node_seed" > "$ledger_dir/node_seed"
+    echo "$node_seed" > "./node_seed"
 
-    $engine run --rm -v $ledger_volume_name:/var/lib/indy validator init-node "$node_name" --seed-path=/var/lib/indy/node_seed "$verbose"
+    $engine run --rm -v $ledger_volume_name:/var/lib/indy -v ./node_seed:/var/lib/indy/node_seed validator init-node "$node_name" --seed-path=/var/lib/indy/node_seed "$verbose"
 fi
 
 # check the exit code
@@ -262,8 +256,8 @@ if [ ! $? -eq 0 ]; then
 fi
 
 # savely remove any seed data that has been used
-if [ -f "$ledger_dir/node_seed" ]; then
-    shred --remove=unlink "$ledger_dir/node_seed"
+if [ -f "./node_seed" ]; then
+    shred --remove=unlink "./node_seed"
 fi
 
 echo -e "\n\033[1mSetup has been completed\033[0m"
