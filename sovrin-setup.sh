@@ -13,10 +13,14 @@ Options:
     -v, --verbose               Print verbose output"
 }
 
+print_error() {
+    >&2 echo -e "\033[1;31mError:\033[0m $1"
+}
+
 # checks that a given argument is set and prints an error if not
 check_argument() {
     if [ -z "$1" ]; then
-        >&2 echo "Error: $2"
+        print_error "$2"
         exit 22
     fi
 }
@@ -113,7 +117,7 @@ while true; do
             break
             ;;
         *)
-            >&2 echo "Error: unexpected internal error"
+            print_error "unexpected internal error"
             exit 1
             ;;
     esac
@@ -171,7 +175,7 @@ else
         # import setup config from a file
         . "$config"
     else
-        >&2 echo "Error: cannot read config file at $config"
+        print_error "cannot read config file at $config"
         exit 22
     fi
 fi
@@ -183,15 +187,13 @@ check_argument "$wallet_name" "Missing wallet name in config"
 
 # check which container engine to use
 if [ -z "${engine+x}" ]; then
-    has_command "podman"
-    if [ $? -eq 0 ]; then
+    if has_command "podman"; then
         engine="podman"
     else
-        has_command "docker"
-        if [ $? -eq 0 ]; then
+        if has_command "docker"; then
             engine="docker"
         else
-            >&2 echo "Error: Cannot find docker or podman executable"
+            print_error "cannot find docker or podman executable"
             exit 1
         fi
     fi
@@ -199,9 +201,16 @@ fi
 
 # build the container images
 echo "Building indy-cli image..."
-$engine build -t indy-cli ./indy-cli > /dev/null
+if ! $engine build -t indy-cli ./indy-cli > /dev/null; then
+    print_error "failed to build cli image"
+    exit 1
+fi
+
 echo "Building validator image..."
-$engine build -t validator ./validator > /dev/null
+if ! $engine build -t validator ./validator > /dev/null; then
+    print_error "failed to build validator image"
+    exit 1
+fi
 
 # check if volumes already exist
 volumes=$($engine volume ls)
@@ -227,7 +236,7 @@ fi
 
 # check the exit code
 if [ ! $? -eq 0 ]; then
-    >&2 echo -e "\033[1;31mError:\033[0m failed to create wallet"
+    print_error "failed to create wallet"
     exit 1
 fi
 
@@ -251,7 +260,7 @@ fi
 
 # check the exit code
 if [ ! $? -eq 0 ]; then
-    >&2 echo -e "\033[1;31mError:\033[0m failed to initialize node"
+    print_error "failed to initialize node"
     exit 1
 fi
 

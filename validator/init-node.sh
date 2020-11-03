@@ -13,10 +13,14 @@ Options:
     -v, --verbose               Print verbose command output"
 }
 
+print_error() {
+    >&2 echo -e "\033[1;31mError:\033[0m $1"
+}
+
 # checks if an argument exists or throws an error otherwise
 check_argument() {
     if [ -z "$1" ]; then
-        >&2 echo "Error: $2"
+        print_error "$2"
         exit 22
     fi
 }
@@ -59,7 +63,7 @@ while true; do
             break
             ;;
         *)
-            >&2 echo "Error: unexpected internal error"
+            print_error "unexpected internal error"
             exit 1
             ;;
     esac
@@ -73,7 +77,7 @@ node_name=$1
 
 # check that only one seed fetch mechanism is specified
 if [ ! -z "${seed+x}" ] && [ ! -z "${seed_path}" ]; then
-    >&2 echo "Error: ambiguous seed argument. --seed and --seed-path cannot be used together"
+    print_error "ambiguous seed argument. --seed and --seed-path cannot be used together"
     exit 22
 fi
 
@@ -92,7 +96,7 @@ fi
 
 # verify the seed length
 if [ ! -z "${seed+x}" ] && [ ${#seed} != 32 ]; then
-    >&2 echo "Error: incorrect seed size. Expected 32 but got ${#seed}"
+    print_error "incorrect seed size. Expected 32 but got ${#seed}"
     exit 22
 fi
 
