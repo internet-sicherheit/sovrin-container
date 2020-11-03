@@ -231,7 +231,7 @@ else
     # using a file to do so hides it from the process list
     echo "$steward_seed" > "./steward_seed"
 
-    $engine run --rm -v $wallet_volume_name:/root/.indy_client -v ./steward_seed:/root/.indy_client/steward_seed indy-cli generate-keys "$pool_name" "$wallet_name" --seed-path=/root/.indy_client/steward_seed "$verbose"
+    $engine run --rm -v $wallet_volume_name:/root/.indy_client -v $(pwd)/steward_seed:/root/.indy_client/steward_seed indy-cli generate-keys "$pool_name" "$wallet_name" --seed-path=/root/.indy_client/steward_seed "$verbose"
 fi
 
 # check the exit code
@@ -240,7 +240,7 @@ if [ ! $? -eq 0 ]; then
     exit 1
 fi
 
-# savely remove any seed data that has been used
+# safely remove any seed data that has been used
 if [ -f "./steward_seed" ]; then
     shred --remove=unlink "./steward_seed"
 fi
@@ -255,7 +255,7 @@ else
     # using a file to do so hides it from the process list
     echo "$node_seed" > "./node_seed"
 
-    $engine run --rm -v $ledger_volume_name:/var/lib/indy -v ./node_seed:/var/lib/indy/node_seed validator init-node "$node_name" --seed-path=/var/lib/indy/node_seed "$verbose"
+    $engine run --rm -v $ledger_volume_name:/var/lib/indy -v $(pwd)/node_seed:/var/lib/indy/node_seed validator init-node "$node_name" --seed-path=/var/lib/indy/node_seed "$verbose"
 fi
 
 # check the exit code
@@ -264,7 +264,7 @@ if [ ! $? -eq 0 ]; then
     exit 1
 fi
 
-# savely remove any seed data that has been used
+# safely remove any seed data that has been used
 if [ -f "./node_seed" ]; then
     shred --remove=unlink "./node_seed"
 fi
