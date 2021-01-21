@@ -28,4 +28,4 @@ check_argument "$NODE_CLIENT_IP" "NODE_CLIENT_IP"
 check_argument "$NODE_CLIENT_PORT" "NODE_CLIENT_PORT"
 
 # start the node
-/usr/bin/env python3 -O /usr/local/bin/start_indy_node "$NODE_NAME" "$NODE_IP" "$NODE_PORT" "$NODE_CLIENT_IP" "$NODE_CLIENT_PORT"
+exec /usr/bin/env python3 -O /usr/local/bin/start_indy_node "$NODE_NAME" "$NODE_IP" "$NODE_PORT" "$NODE_CLIENT_IP" "$NODE_CLIENT_PORT"
