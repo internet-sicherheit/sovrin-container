@@ -80,7 +80,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Run setup in interactive mode
-      run: (echo "?"; echo "nodename"; echo "?"; echo ""; echo "?"; echo ""; echo "?"; echo "y"; echo "?"; echo "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"; echo "?"; echo "y"; echo "?"; echo "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"; echo "?"; echo "") | ./sovrin-setup.sh > output
+      run: (echo "?"; echo "nodename"; echo "?"; echo ""; echo "?"; echo ""; echo "?"; echo "y"; echo "?"; echo "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"; echo "?"; echo "y"; echo "?"; echo "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"; echo "?"; echo "") | sudo ./sovrin-setup.sh > output
     - name: Verify help message output
       run: test $(grep -iE "Help:\s[^[:space:]]+" output | wc -l) ==  8
     - name: Verify seed transfer
@@ -98,7 +98,7 @@ jobs:
     - name: Run setup in non-interactive mode
       run: |
         echo -e "node_name=\"sovrin-node\"\npool_name=\"buildernet\"\nwallet_name=\"buildernet_wallet\"\nsteward_seed=\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"\nnode_seed=\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"" > ~/setup_config
-        ./sovrin-setup.sh -c ~/setup_config > output
+        sudo ./sovrin-setup.sh -c ~/setup_config > output
     - name: Verify seed transfer
       run: |
         test $(grep -i "Steward seed:" output |  awk -F' ' '{print $NF}') == "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
